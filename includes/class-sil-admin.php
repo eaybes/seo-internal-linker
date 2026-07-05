@@ -176,16 +176,16 @@ class SIL_Admin {
 					</tr>
 
 					<tr>
-						<th><label for="sil_api_key"><?php esc_html_e( 'Anthropic API key', 'sil' ); ?></label></th>
+						<th><label for="sil_api_key"><?php esc_html_e( 'Gemini API key', 'sil' ); ?></label></th>
 						<td>
-							<input type="password" id="sil_api_key" name="anthropic_api_key"
+							<input type="password" id="sil_api_key" name="gemini_api_key"
 								class="regular-text" autocomplete="new-password"
-								placeholder="<?php echo ! empty( $settings['anthropic_api_key'] ) ? esc_attr__( '(saved — leave blank to keep)', 'sil' ) : ''; ?>"
+								placeholder="<?php echo ! empty( $settings['gemini_api_key'] ) ? esc_attr__( '(saved — leave blank to keep)', 'sil' ) : ''; ?>"
 								value="" />
 							<p class="description">
-								<?php esc_html_e( 'Used to generate TL;DR summaries. Leave blank to keep the existing key. Without a key, TL;DR generation is silently skipped.', 'sil' ); ?>
+								<?php esc_html_e( 'Google Gemini API key used to generate TL;DR summaries. Leave blank to keep the existing key. Without a key, TL;DR generation is silently skipped.', 'sil' ); ?>
 							</p>
-							<?php if ( ! empty( $settings['anthropic_api_key'] ) ) : ?>
+							<?php if ( ! empty( $settings['gemini_api_key'] ) ) : ?>
 								<p class="description" style="color:#2ea44f;">&#10003; <?php esc_html_e( 'API key is set.', 'sil' ); ?></p>
 							<?php else : ?>
 								<p class="description" style="color:#cf222e;">&#9888; <?php esc_html_e( 'No API key — TL;DR generation is disabled.', 'sil' ); ?></p>

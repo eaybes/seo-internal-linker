@@ -73,7 +73,7 @@ class SIL_TLDR {
 		}
 
 		$settings = SIL_Settings::get();
-		if ( empty( $settings['anthropic_api_key'] ) ) {
+		if ( empty( $settings['gemini_api_key'] ) ) {
 			return;
 		}
 
@@ -84,7 +84,7 @@ class SIL_TLDR {
 
 		self::$processing_ids[] = $post_id;
 
-		$bullets = $this->call_api( $post->post_title, $plain_text, $settings['anthropic_api_key'] );
+		$bullets = $this->call_api( $post->post_title, $plain_text, $settings['gemini_api_key'] );
 
 		self::$processing_ids = array_values(
 			array_filter( self::$processing_ids, function ( $id ) use ( $post_id ) {
@@ -114,24 +114,29 @@ class SIL_TLDR {
 			. "Article title: {$title}\n\n"
 			. "Article content:\n{$truncated}";
 
+		// API key is passed as a URL query parameter per Google's auth model.
+		$endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='
+			. rawurlencode( $api_key );
+
 		$response = wp_remote_post(
-			'https://api.anthropic.com/v1/messages',
+			$endpoint,
 			array(
 				'timeout' => 30,
 				'headers' => array(
-					'Content-Type'      => 'application/json',
-					'x-api-key'         => $api_key,
-					'anthropic-version' => '2023-06-01',
+					'Content-Type' => 'application/json',
 				),
 				'body' => wp_json_encode(
 					array(
-						'model'      => 'claude-haiku-4-5-20251001',
-						'max_tokens' => 512,
-						'messages'   => array(
+						'contents' => array(
 							array(
-								'role'    => 'user',
-								'content' => $prompt,
+								'parts' => array(
+									array( 'text' => $prompt ),
+								),
 							),
+						),
+						'generationConfig' => array(
+							'maxOutputTokens' => 512,
+							'temperature'     => 0.4,
 						),
 					)
 				),
@@ -147,7 +152,9 @@ class SIL_TLDR {
 		}
 
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
-		$text = isset( $body['content'][0]['text'] ) ? trim( $body['content'][0]['text'] ) : '';
+		$text = isset( $body['candidates'][0]['content']['parts'][0]['text'] )
+			? trim( $body['candidates'][0]['content']['parts'][0]['text'] )
+			: '';
 
 		if ( '' === $text ) {
 			return array();

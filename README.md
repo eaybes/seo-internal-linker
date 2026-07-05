@@ -1,6 +1,6 @@
 # SEO Internal Linker
 
-A WordPress plugin that automatically turns the **first occurrence** of a defined phrase in a post into a link to a target page, and generates a friendly, SEO/AEO-optimised **TL;DR summary** at the top of each post via the Claude API — all without touching render time.
+A WordPress plugin that automatically turns the **first occurrence** of a defined phrase in a post into a link to a target page, and generates a friendly, SEO/AEO-optimised **TL;DR summary** at the top of each post via the Gemini API — all without touching render time.
 
 **Created by [Elad Aybes](https://github.com/eaybes).**
 
@@ -41,7 +41,7 @@ A WordPress plugin that automatically turns the **first occurrence** of a define
 - **Configurable link behavior** — optionally open auto-inserted links in a new tab (`target="_blank" rel="noopener noreferrer"`).
 
 **TL;DR Auto-Summary**
-- **AI-generated summaries** — on post save, the plugin calls the Claude API to produce up to 5 friendly, keyword-rich bullet points summarising the article.
+- **AI-generated summaries** — on post save, the plugin calls the Gemini API to produce up to 5 friendly, keyword-rich bullet points summarising the article.
 - **SEO + AEO optimised** — bullets are written as standalone, complete sentences designed to rank in search results and surface in voice search / AI answer engines.
 - **Schema.org markup** — the TL;DR box renders as an `ItemList` with `itemscope`/`itemprop` attributes giving structured-data signals to search engines.
 - **Opt-in for pages** — TL;DR is on by default for posts and can be enabled per-page via the editor sidebar.
@@ -63,7 +63,7 @@ A WordPress plugin that automatically turns the **first occurrence** of a define
    - The plugin parses the content into a DOM tree and links the **first plain-text occurrence** of each phrase (longest-first to avoid partial matches).
    - Occurrences inside headings or existing links are counted as "used" — no second link is added.
    - The rewritten `post_content` is stored permanently in the database.
-3. If an Anthropic API key is configured, the plugin also calls the Claude API and stores up to 5 TL;DR bullet points in post meta.
+3. If a Gemini API key is configured, the plugin also calls the Gemini API and stores up to 5 TL;DR bullet points in post meta.
 4. On the front end, the TL;DR box is injected at the top of the content via the `the_content` filter (no `post_content` is modified), styled with a small inline CSS block.
 
 ---
@@ -101,13 +101,13 @@ Under **Settings** on the same page:
 |---|---|
 | Open links in new tab | Adds `target="_blank" rel="noopener noreferrer"` to all auto-inserted links. |
 | TL;DR section heading | Label shown at the top of every TL;DR box (default: `TL;DR 😎`). |
-| Anthropic API key | Used to call the Claude API for TL;DR generation. Leave blank to disable. The field is a password input that preserves the existing key if submitted empty. |
+| Gemini API key | Used to call the Gemini API for TL;DR generation. Leave blank to disable. The field is a password input that preserves the existing key if submitted empty. |
 
 ### TL;DR Auto-Summary
 
-Once an Anthropic API key is entered:
+Once a Gemini API key is entered:
 
-- Every time a post is saved, the plugin sends the post title and content (up to ~700 words) to the Claude API and stores up to 5 bullet points in post meta.
+- Every time a post is saved, the plugin sends the post title and content (up to ~700 words) to the Gemini API and stores up to 5 bullet points in post meta.
 - Bullets appear in a styled, bordered box right at the start of the post content.
 - The box includes `schema.org/ItemList` structured data for SEO/AEO.
 - You can preview the current bullets in the post editor's **SEO Internal Linker** sidebar meta box.
@@ -159,7 +159,7 @@ After adding, editing, or deleting phrases, existing posts won't be updated unti
 - **Input sanitization**: phrase text has tags stripped and whitespace normalized; length is capped to match the database column.
 - **XXE protection**: the DOM parser uses `LIBXML_NONET` and explicit entity-loader hardening (PHP < 8 only; PHP 8+ disables external entities by default).
 - **Safe redirects**: all post-action redirects use `wp_safe_redirect()`.
-- **No unsolicited remote calls**: the only external request is to the Anthropic API, which only fires when you have explicitly configured an API key.
+- **No unsolicited remote calls**: the only external request is to the Google Gemini API, which only fires when you have explicitly configured an API key.
 
 ---
 
@@ -217,8 +217,8 @@ Open that post, find the **SEO Internal Linker** sidebar meta box, and uncheck t
 **Can I customise the look of the TL;DR box?**
 Add CSS targeting `.sil-tldr-box`, `.sil-tldr-title`, and `.sil-tldr-box li` in your theme. The plugin's inline styles are intentionally minimal so they're easy to override.
 
-**Which Claude model is used for TL;DR?**
-`claude-haiku-4-5` — the fastest and most cost-effective Claude model, well-suited for short summarisation tasks.
+**Which Gemini model is used for TL;DR?**
+`gemini-2.0-flash` — the fastest and most cost-effective Gemini model, well-suited for short summarisation tasks.
 
 **Does it work with Hebrew/RTL content?**
 Yes — all matching and DOM rewriting is multibyte-safe and was specifically tested with Hebrew text.
@@ -231,8 +231,8 @@ Internal linking happens once on save, not on every page view. TL;DR generation 
 ## Changelog
 
 ### 1.1.0
-- **New**: TL;DR auto-summary — generates up to 5 SEO/AEO-optimised bullet points via the Claude API on post save, displayed in a styled, schema-marked box at the top of each post.
-- **New**: TL;DR settings (section heading, Anthropic API key) in the plugin admin screen.
+- **New**: TL;DR auto-summary — generates up to 5 SEO/AEO-optimised bullet points via the Gemini API on post save, displayed in a styled, schema-marked box at the top of each post.
+- **New**: TL;DR settings (section heading, Gemini API key) in the plugin admin screen.
 - **New**: Per-post opt-out / per-page opt-in for TL;DR, with bullet preview and "Clear TL;DR" button in the editor sidebar.
 - **New**: SEO anchor text tip displayed below the phrase form in the admin screen.
 - **Improved**: settings now preserve the existing API key when the password field is submitted empty.

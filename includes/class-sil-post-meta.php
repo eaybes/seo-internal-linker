@@ -109,7 +109,7 @@ class SIL_Post_Meta {
 		// TL;DR controls
 		// ----------------------------------------------------------------
 		$settings    = SIL_Settings::get();
-		$has_api_key = ! empty( $settings['anthropic_api_key'] );
+		$has_api_key = ! empty( $settings['gemini_api_key'] );
 		$section_name = ! empty( $settings['tldr_section_name'] )
 			? $settings['tldr_section_name']
 			: 'TL;DR 😎';
@@ -120,7 +120,7 @@ class SIL_Post_Meta {
 
 		if ( ! $has_api_key ) {
 			echo '<p style="font-size:12px;color:#888;">'
-				. esc_html__( 'Add an Anthropic API key in the plugin settings to enable automatic TL;DR generation.', 'sil' )
+				. esc_html__( 'Add a Gemini API key in the plugin settings to enable automatic TL;DR generation.', 'sil' )
 				. '</p>';
 		} else {
 			if ( $is_page ) {
