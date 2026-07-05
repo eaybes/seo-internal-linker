@@ -5,11 +5,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Per-post/page controls:
- * - Pages: opt-in checkbox to enable automatic linking (off by default).
- * - Posts: opt-out checkbox to disable automatic linking (on by default).
- * - Both: a checklist to re-enable phrases the editor previously unlinked
- *   (or to manually disable specific phrases) on this piece of content.
+ * Per-post/page controls rendered in the editor sidebar:
+ *
+ * Linking:
+ *   - Pages: opt-in checkbox to enable automatic linking (off by default).
+ *   - Posts: opt-out checkbox to disable automatic linking (on by default).
+ *   - Both: a checklist to re-enable / disable individual phrases on this content.
+ *
+ * TL;DR:
+ *   - Posts: opt-out checkbox to disable TL;DR generation (on by default).
+ *   - Pages: opt-in checkbox to enable TL;DR generation (off by default).
+ *   - Both: preview of current bullets + a "Clear TL;DR" button.
  */
 class SIL_Post_Meta {
 
@@ -48,12 +54,19 @@ class SIL_Post_Meta {
 
 		wp_nonce_field( self::NONCE_ACTION, self::NONCE_FIELD );
 
-		if ( 'page' === $post->post_type ) {
+		$is_page = ( 'page' === $post->post_type );
+
+		// ----------------------------------------------------------------
+		// Internal linking controls
+		// ----------------------------------------------------------------
+		echo '<p style="font-weight:600;margin:0 0 6px;">' . esc_html__( 'Internal linking', 'sil' ) . '</p>';
+
+		if ( $is_page ) {
 			$enabled = '1' === get_post_meta( $post->ID, SIL_Linker::META_ENABLED, true );
 			?>
 			<label>
 				<input type="checkbox" name="sil_enabled" value="1" <?php checked( $enabled ); ?> />
-				<?php esc_html_e( 'Enable automatic SEO internal linking on this page', 'sil' ); ?>
+				<?php esc_html_e( 'Enable auto-linking on this page', 'sil' ); ?>
 			</label>
 			<?php
 		} else {
@@ -61,7 +74,7 @@ class SIL_Post_Meta {
 			?>
 			<label>
 				<input type="checkbox" name="sil_disabled" value="1" <?php checked( $disabled ); ?> />
-				<?php esc_html_e( 'Disable automatic SEO internal linking on this post', 'sil' ); ?>
+				<?php esc_html_e( 'Disable auto-linking on this post', 'sil' ); ?>
 			</label>
 			<?php
 		}
@@ -71,19 +84,99 @@ class SIL_Post_Meta {
 		$phrases   = SIL_DB::get_all();
 
 		if ( ! empty( $phrases ) ) {
-			echo '<hr /><p>' . esc_html__( 'Disabled phrases on this content (uncheck to re-enable):', 'sil' ) . '</p>';
-			echo '<div style="max-height:160px;overflow:auto;">';
+			echo '<p style="margin:10px 0 4px;font-style:italic;font-size:12px;">'
+				. esc_html__( 'Disabled phrases on this content:', 'sil' )
+				. '</p>';
+			echo '<div style="max-height:140px;overflow:auto;border:1px solid #ddd;padding:4px 8px;border-radius:4px;">';
 			foreach ( $phrases as $phrase ) {
 				$is_skipped = in_array( (int) $phrase->id, $skip_list, true );
 				printf(
-					'<label style="display:block;"><input type="checkbox" name="sil_skip_phrases[]" value="%1$d" %2$s /> %3$s</label>',
+					'<label style="display:block;font-size:12px;padding:2px 0;"><input type="checkbox" name="sil_skip_phrases[]" value="%1$d" %2$s /> %3$s</label>',
 					(int) $phrase->id,
 					checked( $is_skipped, true, false ),
 					esc_html( $phrase->phrase )
 				);
 			}
 			echo '</div>';
-			echo '<p class="description">' . esc_html__( 'If you manually remove an auto-link, it is added here automatically so it stays removed.', 'sil' ) . '</p>';
+			echo '<p style="font-size:11px;color:#666;margin:4px 0 0;">'
+				. esc_html__( 'Manually removed links are added here automatically.', 'sil' )
+				. '</p>';
+		}
+
+		echo '<hr style="margin:14px 0;" />';
+
+		// ----------------------------------------------------------------
+		// TL;DR controls
+		// ----------------------------------------------------------------
+		$settings    = SIL_Settings::get();
+		$has_api_key = ! empty( $settings['anthropic_api_key'] );
+		$section_name = ! empty( $settings['tldr_section_name'] )
+			? $settings['tldr_section_name']
+			: 'TL;DR 😎';
+
+		echo '<p style="font-weight:600;margin:0 0 6px;">'
+			. esc_html( $section_name )
+			. ' ' . esc_html__( 'Summary', 'sil' ) . '</p>';
+
+		if ( ! $has_api_key ) {
+			echo '<p style="font-size:12px;color:#888;">'
+				. esc_html__( 'Add an Anthropic API key in the plugin settings to enable automatic TL;DR generation.', 'sil' )
+				. '</p>';
+		} else {
+			if ( $is_page ) {
+				$tldr_enabled = '1' === get_post_meta( $post->ID, SIL_TLDR::META_ENABLED, true );
+				?>
+				<label>
+					<input type="checkbox" name="sil_tldr_enabled" value="1" <?php checked( $tldr_enabled ); ?> />
+					<?php esc_html_e( 'Enable TL;DR summary on this page', 'sil' ); ?>
+				</label>
+				<?php
+			} else {
+				$tldr_disabled = '1' === get_post_meta( $post->ID, SIL_TLDR::META_DISABLED, true );
+				?>
+				<label>
+					<input type="checkbox" name="sil_tldr_disabled" value="1" <?php checked( $tldr_disabled ); ?> />
+					<?php esc_html_e( 'Disable TL;DR summary on this post', 'sil' ); ?>
+				</label>
+				<?php
+			}
+		}
+
+		// Bullets preview
+		$bullets = get_post_meta( $post->ID, SIL_TLDR::META_BULLETS, true );
+		if ( ! empty( $bullets ) && is_array( $bullets ) ) {
+			echo '<p style="margin:10px 0 4px;font-style:italic;font-size:12px;">'
+				. esc_html__( 'Current TL;DR:', 'sil' ) . '</p>';
+			echo '<ul style="margin:0 0 8px;padding-left:18px;font-size:12px;">';
+			foreach ( $bullets as $bullet ) {
+				echo '<li style="margin-bottom:3px;">' . esc_html( $bullet ) . '</li>';
+			}
+			echo '</ul>';
+
+			// Clear TL;DR button — small form submitting to admin-post.php
+			$redirect_to = add_query_arg(
+				array(
+					'post'   => $post->ID,
+					'action' => 'edit',
+				),
+				admin_url( 'post.php' )
+			);
+			?>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0;">
+				<?php wp_nonce_field( SIL_Admin::NONCE_ACTION ); ?>
+				<input type="hidden" name="action" value="sil_clear_tldr" />
+				<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
+				<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
+				<button type="submit" class="button button-small"
+					onclick="return confirm('<?php echo esc_js( __( 'Clear TL;DR for this post?', 'sil' ) ); ?>');">
+					<?php esc_html_e( 'Clear TL;DR', 'sil' ); ?>
+				</button>
+			</form>
+			<?php
+		} elseif ( $has_api_key ) {
+			echo '<p style="font-size:12px;color:#888;margin:6px 0 0;">'
+				. esc_html__( 'No TL;DR yet — it will be generated on the next save.', 'sil' )
+				. '</p>';
 		}
 	}
 
@@ -96,22 +189,25 @@ class SIL_Post_Meta {
 			return;
 		}
 
-		if ( isset( $_POST['sil_enabled'] ) ) {
-			update_post_meta( $post_id, SIL_Linker::META_ENABLED, '1' );
-		} elseif ( get_post_type( $post_id ) === 'page' ) {
-			update_post_meta( $post_id, SIL_Linker::META_ENABLED, '0' );
-		}
+		$is_page = ( get_post_type( $post_id ) === 'page' );
 
-		if ( isset( $_POST['sil_disabled'] ) ) {
-			update_post_meta( $post_id, SIL_Linker::META_DISABLED, '1' );
-		} elseif ( get_post_type( $post_id ) === 'post' ) {
-			update_post_meta( $post_id, SIL_Linker::META_DISABLED, '0' );
+		// --- Linking ---
+		if ( $is_page ) {
+			update_post_meta( $post_id, SIL_Linker::META_ENABLED, isset( $_POST['sil_enabled'] ) ? '1' : '0' );
+		} else {
+			update_post_meta( $post_id, SIL_Linker::META_DISABLED, isset( $_POST['sil_disabled'] ) ? '1' : '0' );
 		}
 
 		$skip_list = isset( $_POST['sil_skip_phrases'] ) && is_array( $_POST['sil_skip_phrases'] )
 			? array_map( 'absint', wp_unslash( $_POST['sil_skip_phrases'] ) )
 			: array();
-
 		update_post_meta( $post_id, SIL_Linker::META_SKIP_PHRASES, $skip_list );
+
+		// --- TL;DR ---
+		if ( $is_page ) {
+			update_post_meta( $post_id, SIL_TLDR::META_ENABLED, isset( $_POST['sil_tldr_enabled'] ) ? '1' : '0' );
+		} else {
+			update_post_meta( $post_id, SIL_TLDR::META_DISABLED, isset( $_POST['sil_tldr_disabled'] ) ? '1' : '0' );
+		}
 	}
 }

@@ -22,6 +22,7 @@ class SIL_Admin {
 		add_action( 'admin_post_sil_delete_phrase', array( $this, 'handle_delete_phrase' ) );
 		add_action( 'admin_post_sil_rescan_all', array( $this, 'handle_rescan_all' ) );
 		add_action( 'admin_post_sil_save_settings', array( $this, 'handle_save_settings' ) );
+		add_action( 'admin_post_sil_clear_tldr', array( $this, 'handle_clear_tldr' ) );
 	}
 
 	public function add_menu() {
@@ -59,7 +60,7 @@ class SIL_Admin {
 				<div class="notice notice-error"><p><?php echo esc_html( $error ); ?></p></div>
 			<?php endif; ?>
 			<?php if ( isset( $_GET['updated'] ) ) : ?>
-				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Phrase saved.', 'sil' ); ?></p></div>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Saved successfully.', 'sil' ); ?></p></div>
 			<?php endif; ?>
 			<?php if ( isset( $_GET['deleted'] ) ) : ?>
 				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Phrase deleted.', 'sil' ); ?></p></div>
@@ -67,7 +68,13 @@ class SIL_Admin {
 			<?php if ( isset( $_GET['rescanned'] ) ) : ?>
 				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Rescan started in the background. Progress is shown below.', 'sil' ); ?></p></div>
 			<?php endif; ?>
+			<?php if ( isset( $_GET['tldr_cleared'] ) ) : ?>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'TL;DR cleared for that post.', 'sil' ); ?></p></div>
+			<?php endif; ?>
 
+			<!-- ============================================================ -->
+			<!-- Phrase form                                                    -->
+			<!-- ============================================================ -->
 			<h2><?php echo $editing ? esc_html__( 'Edit phrase', 'sil' ) : esc_html__( 'Add new phrase', 'sil' ); ?></h2>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
@@ -89,8 +96,19 @@ class SIL_Admin {
 				<?php submit_button( $editing ? __( 'Update phrase', 'sil' ) : __( 'Add phrase', 'sil' ) ); ?>
 			</form>
 
+			<!-- SEO tip -->
+			<div style="background:#fff8e1;border-left:4px solid #ffc107;padding:12px 16px;margin:0 0 24px;border-radius:0 4px 4px 0;max-width:700px;">
+				<p style="margin:0;font-size:13px;">
+					<strong><?php esc_html_e( '💡 Tip: Choose your anchor text strategically.', 'sil' ); ?></strong><br />
+					<?php esc_html_e( 'Use clear, specific phrases instead of broad words or just brand names. Pick phrases that describe the linked page well and have a good chance of ranking in search results.', 'sil' ); ?>
+				</p>
+			</div>
+
 			<hr />
 
+			<!-- ============================================================ -->
+			<!-- Phrases table                                                  -->
+			<!-- ============================================================ -->
 			<h2><?php esc_html_e( 'Existing phrases', 'sil' ); ?></h2>
 			<table class="widefat striped">
 				<thead>
@@ -123,11 +141,15 @@ class SIL_Admin {
 
 			<hr />
 
+			<!-- ============================================================ -->
+			<!-- Settings                                                       -->
+			<!-- ============================================================ -->
 			<h2><?php esc_html_e( 'Settings', 'sil' ); ?></h2>
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
 				<input type="hidden" name="action" value="sil_save_settings" />
 				<table class="form-table">
+
 					<tr>
 						<th><?php esc_html_e( 'Link behavior', 'sil' ); ?></th>
 						<td>
@@ -137,12 +159,49 @@ class SIL_Admin {
 							</label>
 						</td>
 					</tr>
+
+					<tr>
+						<th colspan="2">
+							<h3 style="margin:10px 0 0;"><?php esc_html_e( 'TL;DR Auto-Summary', 'sil' ); ?></h3>
+						</th>
+					</tr>
+
+					<tr>
+						<th><label for="sil_tldr_name"><?php esc_html_e( 'Section heading', 'sil' ); ?></label></th>
+						<td>
+							<input type="text" id="sil_tldr_name" name="tldr_section_name" class="regular-text"
+								value="<?php echo esc_attr( $settings['tldr_section_name'] ); ?>" />
+							<p class="description"><?php esc_html_e( 'Label shown at the top of the TL;DR box on each post (default: "TL;DR 😎").', 'sil' ); ?></p>
+						</td>
+					</tr>
+
+					<tr>
+						<th><label for="sil_api_key"><?php esc_html_e( 'Anthropic API key', 'sil' ); ?></label></th>
+						<td>
+							<input type="password" id="sil_api_key" name="anthropic_api_key"
+								class="regular-text" autocomplete="new-password"
+								placeholder="<?php echo ! empty( $settings['anthropic_api_key'] ) ? esc_attr__( '(saved — leave blank to keep)', 'sil' ) : ''; ?>"
+								value="" />
+							<p class="description">
+								<?php esc_html_e( 'Used to generate TL;DR summaries. Leave blank to keep the existing key. Without a key, TL;DR generation is silently skipped.', 'sil' ); ?>
+							</p>
+							<?php if ( ! empty( $settings['anthropic_api_key'] ) ) : ?>
+								<p class="description" style="color:#2ea44f;">&#10003; <?php esc_html_e( 'API key is set.', 'sil' ); ?></p>
+							<?php else : ?>
+								<p class="description" style="color:#cf222e;">&#9888; <?php esc_html_e( 'No API key — TL;DR generation is disabled.', 'sil' ); ?></p>
+							<?php endif; ?>
+						</td>
+					</tr>
+
 				</table>
 				<?php submit_button( __( 'Save settings', 'sil' ), 'secondary' ); ?>
 			</form>
 
 			<hr />
 
+			<!-- ============================================================ -->
+			<!-- Rescan                                                         -->
+			<!-- ============================================================ -->
 			<h2><?php esc_html_e( 'Rescan existing content', 'sil' ); ?></h2>
 			<p><?php esc_html_e( 'Re-applies the current phrase list to all posts (and pages with internal linking enabled). Runs in the background in small batches so it will not time out on large sites.', 'sil' ); ?></p>
 
@@ -169,6 +228,10 @@ class SIL_Admin {
 		</div>
 		<?php
 	}
+
+	// -------------------------------------------------------------------------
+	// Handlers
+	// -------------------------------------------------------------------------
 
 	public function handle_save_phrase() {
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -212,11 +275,7 @@ class SIL_Admin {
 		}
 		check_admin_referer( self::NONCE_ACTION );
 
-		SIL_Settings::update(
-			array(
-				'open_in_new_tab' => isset( $_POST['open_in_new_tab'] ),
-			)
-		);
+		SIL_Settings::update( $_POST );
 
 		wp_safe_redirect( admin_url( 'admin.php?page=sil-phrases&updated=1' ) );
 		exit;
@@ -231,6 +290,28 @@ class SIL_Admin {
 		SIL_Rescan::instance()->start();
 
 		wp_safe_redirect( admin_url( 'admin.php?page=sil-phrases&rescanned=1' ) );
+		exit;
+	}
+
+	/**
+	 * Clears the stored TL;DR bullets for a single post (accessible via the
+	 * post edit screen's meta box "Clear TL;DR" button).
+	 */
+	public function handle_clear_tldr() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to do this.', 'sil' ), 403 );
+		}
+		check_admin_referer( self::NONCE_ACTION );
+
+		$post_id  = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+		$redirect = isset( $_POST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ) : admin_url( 'admin.php?page=sil-phrases' );
+
+		if ( $post_id && current_user_can( 'edit_post', $post_id ) ) {
+			delete_post_meta( $post_id, SIL_TLDR::META_BULLETS );
+		}
+
+		// Return to the post edit screen if possible, otherwise the plugin page.
+		wp_safe_redirect( add_query_arg( 'tldr_cleared', '1', $redirect ) );
 		exit;
 	}
 }
