@@ -65,22 +65,28 @@ class SIL_TLDR {
 
 	public function maybe_generate( $post_id, $post, $update ) {
 		if ( in_array( $post_id, self::$processing_ids, true ) ) {
+			error_log( "SIL_TLDR: skipping post {$post_id} — already processing" );
 			return;
 		}
 
 		if ( ! $this->should_process( $post_id, $post ) ) {
+			error_log( "SIL_TLDR: should_process returned false for post {$post_id} (type={$post->post_type}, status={$post->post_status})" );
 			return;
 		}
 
 		$settings = SIL_Settings::get();
 		if ( empty( $settings['gemini_api_key'] ) ) {
+			error_log( "SIL_TLDR: no Gemini API key configured" );
 			return;
 		}
 
 		$plain_text = wp_strip_all_tags( $post->post_content );
 		if ( '' === trim( $plain_text ) ) {
+			error_log( "SIL_TLDR: post {$post_id} has empty content after stripping tags" );
 			return;
 		}
+
+		error_log( "SIL_TLDR: calling Gemini API for post {$post_id}" );
 
 		self::$processing_ids[] = $post_id;
 
@@ -115,7 +121,7 @@ class SIL_TLDR {
 			. "Article content:\n{$truncated}";
 
 		// API key is passed as a URL query parameter per Google's auth model.
-		$endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='
+		$endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='
 			. rawurlencode( $api_key );
 
 		$response = wp_remote_post(
@@ -144,10 +150,13 @@ class SIL_TLDR {
 		);
 
 		if ( is_wp_error( $response ) ) {
+			error_log( 'SIL_TLDR: wp_remote_post error — ' . $response->get_error_message() );
 			return array();
 		}
 
-		if ( 200 !== (int) wp_remote_retrieve_response_code( $response ) ) {
+		$code = (int) wp_remote_retrieve_response_code( $response );
+		if ( 200 !== $code ) {
+			error_log( "SIL_TLDR: Gemini API returned HTTP {$code} — " . wp_remote_retrieve_body( $response ) );
 			return array();
 		}
 
@@ -157,8 +166,11 @@ class SIL_TLDR {
 			: '';
 
 		if ( '' === $text ) {
+			error_log( 'SIL_TLDR: Gemini returned empty text. Body: ' . wp_remote_retrieve_body( $response ) );
 			return array();
 		}
+
+		error_log( 'SIL_TLDR: Gemini returned ' . count( array_filter( array_map( 'trim', explode( "\n", $text ) ) ) ) . ' bullets' );
 
 		$lines   = array_values( array_filter( array_map( 'trim', explode( "\n", $text ) ) ) );
 		$bullets = array_slice( $lines, 0, 5 );

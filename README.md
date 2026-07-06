@@ -218,7 +218,7 @@ Open that post, find the **SEO Internal Linker** sidebar meta box, and uncheck t
 Add CSS targeting `.sil-tldr-box`, `.sil-tldr-title`, and `.sil-tldr-box li` in your theme. The plugin's inline styles are intentionally minimal so they're easy to override.
 
 **Which Gemini model is used for TL;DR?**
-`gemini-2.0-flash` — the fastest and most cost-effective Gemini model, well-suited for short summarisation tasks.
+`gemini-2.5-flash` — the fastest and most cost-effective Gemini model, well-suited for short summarisation tasks.
 
 **Does it work with Hebrew/RTL content?**
 Yes — all matching and DOM rewriting is multibyte-safe and was specifically tested with Hebrew text.
