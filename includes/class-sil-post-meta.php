@@ -142,18 +142,9 @@ class SIL_Post_Meta {
 			}
 		}
 
-		// Bullets preview
+		// Show Clear button only when bullets exist (summary is visible on the post itself).
 		$bullets = get_post_meta( $post->ID, SIL_TLDR::META_BULLETS, true );
 		if ( ! empty( $bullets ) && is_array( $bullets ) ) {
-			echo '<p style="margin:10px 0 4px;font-style:italic;font-size:12px;">'
-				. esc_html__( 'Current TL;DR:', 'sil' ) . '</p>';
-			echo '<ul style="margin:0 0 8px;padding-left:18px;font-size:12px;">';
-			foreach ( $bullets as $bullet ) {
-				echo '<li style="margin-bottom:3px;">' . esc_html( $bullet ) . '</li>';
-			}
-			echo '</ul>';
-
-			// Clear TL;DR button — small form submitting to admin-post.php
 			$redirect_to = add_query_arg(
 				array(
 					'post'   => $post->ID,
@@ -162,11 +153,12 @@ class SIL_Post_Meta {
 				admin_url( 'post.php' )
 			);
 			?>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0;">
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:6px 0 0;">
 				<?php wp_nonce_field( SIL_Admin::NONCE_ACTION ); ?>
 				<input type="hidden" name="action" value="sil_clear_tldr" />
 				<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
 				<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
+				<p style="font-size:12px;color:#2a9d4e;margin:0 0 6px;">&#10003; <?php esc_html_e( 'Summary is live on the post.', 'sil' ); ?></p>
 				<button type="submit" class="button button-small"
 					onclick="return confirm('<?php echo esc_js( __( 'Clear TL;DR for this post?', 'sil' ) ); ?>');">
 					<?php esc_html_e( 'Clear TL;DR', 'sil' ); ?>

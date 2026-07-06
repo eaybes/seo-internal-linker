@@ -108,15 +108,17 @@ class SIL_TLDR {
 
 		$prompt = "You are an SEO and AEO (Answer Engine Optimization) expert. "
 			. "Read the article below and write a TL;DR summary as bullet points.\n\n"
+			. "CRITICAL: Detect the language of the article and write ALL bullets in that SAME language. "
+			. "If the article is in Hebrew, write in Hebrew. If in English, write in English. Never translate.\n\n"
 			. "Rules:\n"
 			. "- Write up to 5 bullets, at least 1\n"
-			. "- Each bullet is a concise, complete sentence (under 130 characters)\n"
+			. "- Each bullet is a concise, complete sentence (under 150 characters)\n"
 			. "- Use a friendly, conversational but informative tone\n"
 			. "- Include important keywords naturally for SEO\n"
 			. "- Write each bullet as a standalone fact or takeaway, optimised for "
 			. "voice search and featured snippets (AEO)\n"
-			. "- Do NOT use markdown (no **, no -, no #)\n"
-			. "- Return ONLY the bullet lines, one per line, with no intro or outro\n\n"
+			. "- Do NOT use markdown (no **, no *, no -, no #, no numbered lists)\n"
+			. "- Return ONLY the bullet lines, one per line, with no intro, no outro, no labels\n\n"
 			. "Article title: {$title}\n\n"
 			. "Article content:\n{$truncated}";
 
@@ -141,7 +143,7 @@ class SIL_TLDR {
 							),
 						),
 						'generationConfig' => array(
-							'maxOutputTokens' => 512,
+							'maxOutputTokens' => 1024,
 							'temperature'     => 0.4,
 						),
 					)
@@ -172,7 +174,15 @@ class SIL_TLDR {
 
 		error_log( 'SIL_TLDR: Gemini returned ' . count( array_filter( array_map( 'trim', explode( "\n", $text ) ) ) ) . ' bullets' );
 
-		$lines   = array_values( array_filter( array_map( 'trim', explode( "\n", $text ) ) ) );
+		$lines = array_values( array_filter( array_map( function( $line ) {
+			$line = trim( $line );
+			// Strip leading markdown bullet/number characters Gemini sometimes adds.
+			$line = preg_replace( '/^[\*\-•]\s+/', '', $line );
+			$line = preg_replace( '/^\d+[\.\)]\s+/', '', $line );
+			// Strip residual bold markers.
+			$line = str_replace( array( '**', '__' ), '', $line );
+			return trim( $line );
+		}, explode( "\n", $text ) ) ) );
 		$bullets = array_slice( $lines, 0, 5 );
 
 		return $bullets;
