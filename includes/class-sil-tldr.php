@@ -111,7 +111,7 @@ class SIL_TLDR {
 			. "CRITICAL: Detect the language of the article and write ALL bullets in that SAME language. "
 			. "If the article is in Hebrew, write in Hebrew. If in English, write in English. Never translate.\n\n"
 			. "Rules:\n"
-			. "- Write up to 5 bullets, at least 1\n"
+			. "- Write EXACTLY 5 bullets, no more, no less\n"
 			. "- Each bullet is a concise, complete sentence (under 150 characters)\n"
 			. "- Use a friendly, conversational but informative tone\n"
 			. "- Include important keywords naturally for SEO\n"
@@ -184,6 +184,11 @@ class SIL_TLDR {
 			return trim( $line );
 		}, explode( "\n", $text ) ) ) );
 		$bullets = array_slice( $lines, 0, 5 );
+
+		// If fewer than 5 bullets returned, log it for debugging.
+		if ( count( $bullets ) < 5 ) {
+			error_log( 'SIL_TLDR: only ' . count( $bullets ) . ' bullets returned — expected 5' );
+		}
 
 		return $bullets;
 	}
