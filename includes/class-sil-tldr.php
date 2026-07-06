@@ -106,21 +106,16 @@ class SIL_TLDR {
 	private function call_api( $title, $plain_text, $api_key ) {
 		$truncated = wp_trim_words( $plain_text, self::MAX_WORDS );
 
-		$prompt = "You are an SEO and AEO (Answer Engine Optimization) expert. "
-			. "Read the article below and write a TL;DR summary as bullet points.\n\n"
-			. "CRITICAL: Detect the language of the article and write ALL bullets in that SAME language. "
-			. "If the article is in Hebrew, write in Hebrew. If in English, write in English. Never translate.\n\n"
-			. "Rules:\n"
-			. "- Write EXACTLY 5 bullets, no more, no less\n"
-			. "- Each bullet is a concise, complete sentence (under 150 characters)\n"
-			. "- Use a friendly, conversational but informative tone\n"
-			. "- Include important keywords naturally for SEO\n"
-			. "- Write each bullet as a standalone fact or takeaway, optimised for "
-			. "voice search and featured snippets (AEO)\n"
-			. "- Do NOT use markdown (no **, no *, no -, no #, no numbered lists)\n"
-			. "- Return ONLY the bullet lines, one per line, with no intro, no outro, no labels\n\n"
-			. "Article title: {$title}\n\n"
-			. "Article content:\n{$truncated}";
+		$system_instruction = "You are an SEO and AEO expert that writes article summaries.\n"
+			. "Output format: exactly 5 plain-text lines, one per line, nothing else.\n"
+			. "Each line is one complete summary sentence.\n"
+			. "No bullet characters, no numbers, no markdown, no intro, no outro.\n"
+			. "Detect the language of the article and write in that same language.\n"
+			. "Each sentence must be under 150 characters, keyword-rich, and self-contained.";
+
+		$user_message = "Write a 5-line TL;DR summary for the following article.\n\n"
+			. "Title: {$title}\n\n"
+			. "Article:\n{$truncated}";
 
 		// API key is passed as a URL query parameter per Google's auth model.
 		$endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='
@@ -135,16 +130,18 @@ class SIL_TLDR {
 				),
 				'body' => wp_json_encode(
 					array(
+						'system_instruction' => array(
+							'parts' => array( array( 'text' => $system_instruction ) ),
+						),
 						'contents' => array(
 							array(
-								'parts' => array(
-									array( 'text' => $prompt ),
-								),
+								'role'  => 'user',
+								'parts' => array( array( 'text' => $user_message ) ),
 							),
 						),
 						'generationConfig' => array(
 							'maxOutputTokens' => 1024,
-							'temperature'     => 0.4,
+							'temperature'     => 0.3,
 						),
 					)
 				),
