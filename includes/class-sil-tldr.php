@@ -140,7 +140,7 @@ class SIL_TLDR {
 							),
 						),
 						'generationConfig' => array(
-							'maxOutputTokens' => 1024,
+							'maxOutputTokens' => 2048,
 							'temperature'     => 0.3,
 						),
 					)
@@ -169,7 +169,8 @@ class SIL_TLDR {
 			return array();
 		}
 
-		error_log( 'SIL_TLDR: Gemini returned ' . count( array_filter( array_map( 'trim', explode( "\n", $text ) ) ) ) . ' bullets' );
+		$finish_reason = $body['candidates'][0]['finishReason'] ?? 'unknown';
+		error_log( 'SIL_TLDR: Gemini finishReason=' . $finish_reason . ', raw bullet count=' . count( array_filter( array_map( 'trim', explode( "\n", $text ) ) ) ) );
 
 		$lines = array_values( array_filter( array_map( function( $line ) {
 			$line = trim( $line );
