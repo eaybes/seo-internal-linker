@@ -76,6 +76,15 @@ class SIL_Admin {
 			<!-- Phrase form                                                    -->
 			<!-- ============================================================ -->
 			<h2><?php echo $editing ? esc_html__( 'Edit phrase', 'sil' ) : esc_html__( 'Add new phrase', 'sil' ); ?></h2>
+
+			<!-- SEO tip -->
+			<div style="background:#fff8e1;border-left:4px solid #ffc107;padding:12px 16px;margin:0 0 16px;border-radius:0 4px 4px 0;max-width:700px;">
+				<p style="margin:0;font-size:13px;">
+					<strong><?php esc_html_e( '💡 Tip: Choose your anchor text strategically.', 'sil' ); ?></strong><br />
+					<?php esc_html_e( 'Use clear, specific phrases instead of broad words or just brand names. Pick phrases that describe the linked page well and have a good chance of ranking in search results.', 'sil' ); ?>
+				</p>
+			</div>
+
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
 				<input type="hidden" name="action" value="sil_save_phrase" />
@@ -95,14 +104,6 @@ class SIL_Admin {
 				</table>
 				<?php submit_button( $editing ? __( 'Update phrase', 'sil' ) : __( 'Add phrase', 'sil' ) ); ?>
 			</form>
-
-			<!-- SEO tip -->
-			<div style="background:#fff8e1;border-left:4px solid #ffc107;padding:12px 16px;margin:0 0 24px;border-radius:0 4px 4px 0;max-width:700px;">
-				<p style="margin:0;font-size:13px;">
-					<strong><?php esc_html_e( '💡 Tip: Choose your anchor text strategically.', 'sil' ); ?></strong><br />
-					<?php esc_html_e( 'Use clear, specific phrases instead of broad words or just brand names. Pick phrases that describe the linked page well and have a good chance of ranking in search results.', 'sil' ); ?>
-				</p>
-			</div>
 
 			<hr />
 
