@@ -133,7 +133,7 @@ class SIL_Post_Meta {
 				if ( $tldr_enabled ) {
 					?>
 					<p style="font-size:12px;color:#2a9d4e;margin:0 0 6px;">&#10003; <?php esc_html_e( 'TL;DR enabled on this page.', 'sil' ); ?></p>
-					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0 0 6px;">
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" target="_top" style="margin:0 0 6px;">
 						<?php wp_nonce_field( SIL_Admin::NONCE_ACTION ); ?>
 						<input type="hidden" name="action" value="sil_set_tldr_state" />
 						<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
@@ -145,7 +145,7 @@ class SIL_Post_Meta {
 				} else {
 					?>
 					<p style="font-size:12px;color:#888;margin:0 0 6px;"><?php esc_html_e( 'TL;DR disabled on this page.', 'sil' ); ?></p>
-					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0 0 6px;">
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" target="_top" style="margin:0 0 6px;">
 						<?php wp_nonce_field( SIL_Admin::NONCE_ACTION ); ?>
 						<input type="hidden" name="action" value="sil_set_tldr_state" />
 						<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
@@ -160,7 +160,7 @@ class SIL_Post_Meta {
 				if ( $tldr_disabled ) {
 					?>
 					<p style="font-size:12px;color:#888;margin:0 0 6px;"><?php esc_html_e( 'TL;DR disabled on this post.', 'sil' ); ?></p>
-					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0 0 6px;">
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" target="_top" style="margin:0 0 6px;">
 						<?php wp_nonce_field( SIL_Admin::NONCE_ACTION ); ?>
 						<input type="hidden" name="action" value="sil_set_tldr_state" />
 						<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
@@ -172,7 +172,7 @@ class SIL_Post_Meta {
 				} else {
 					?>
 					<p style="font-size:12px;color:#2a9d4e;margin:0 0 6px;">&#10003; <?php esc_html_e( 'TL;DR active on this post.', 'sil' ); ?></p>
-					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0 0 6px;">
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" target="_top" style="margin:0 0 6px;">
 						<?php wp_nonce_field( SIL_Admin::NONCE_ACTION ); ?>
 						<input type="hidden" name="action" value="sil_set_tldr_state" />
 						<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
@@ -188,7 +188,7 @@ class SIL_Post_Meta {
 			$bullets = get_post_meta( $post->ID, SIL_TLDR::META_BULLETS, true );
 			if ( ! empty( $bullets ) && is_array( $bullets ) ) {
 				?>
-				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:4px 0 0;">
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" target="_top" style="margin:4px 0 0;">
 					<?php wp_nonce_field( SIL_Admin::NONCE_ACTION ); ?>
 					<input type="hidden" name="action" value="sil_clear_tldr" />
 					<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
