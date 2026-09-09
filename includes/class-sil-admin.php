@@ -23,6 +23,7 @@ class SIL_Admin {
 		add_action( 'admin_post_sil_rescan_all', array( $this, 'handle_rescan_all' ) );
 		add_action( 'admin_post_sil_save_settings', array( $this, 'handle_save_settings' ) );
 		add_action( 'admin_post_sil_clear_tldr', array( $this, 'handle_clear_tldr' ) );
+		add_action( 'admin_post_sil_set_tldr_state', array( $this, 'handle_set_tldr_state' ) );
 	}
 
 	public function add_menu() {
@@ -291,6 +292,34 @@ class SIL_Admin {
 		SIL_Rescan::instance()->start();
 
 		wp_safe_redirect( admin_url( 'admin.php?page=sil-phrases&rescanned=1' ) );
+		exit;
+	}
+
+	/**
+	 * Enables or disables TL;DR for a single post/page via a dedicated form POST,
+	 * bypassing the classic meta box nonce so it works reliably in the block editor.
+	 */
+	public function handle_set_tldr_state() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to do this.', 'sil' ), 403 );
+		}
+		check_admin_referer( self::NONCE_ACTION );
+
+		$post_id  = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
+		$state    = isset( $_POST['state'] ) ? sanitize_key( $_POST['state'] ) : '';
+		$redirect = isset( $_POST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ) : admin_url( 'admin.php?page=sil-phrases' );
+
+		if ( $post_id && current_user_can( 'edit_post', $post_id ) ) {
+			$is_page = ( get_post_type( $post_id ) === 'page' );
+
+			if ( $is_page ) {
+				update_post_meta( $post_id, SIL_TLDR::META_ENABLED, 'enable' === $state ? '1' : '0' );
+			} else {
+				update_post_meta( $post_id, SIL_TLDR::META_DISABLED, 'disable' === $state ? '1' : '0' );
+			}
+		}
+
+		wp_safe_redirect( $redirect );
 		exit;
 	}
 

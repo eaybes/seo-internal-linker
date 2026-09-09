@@ -123,52 +123,87 @@ class SIL_Post_Meta {
 				. esc_html__( 'Add a Gemini API key in the plugin settings to enable automatic TL;DR generation.', 'sil' )
 				. '</p>';
 		} else {
-			if ( $is_page ) {
-				$tldr_enabled = '1' === get_post_meta( $post->ID, SIL_TLDR::META_ENABLED, true );
-				?>
-				<label>
-					<input type="checkbox" name="sil_tldr_enabled" value="1" <?php checked( $tldr_enabled ); ?> />
-					<?php esc_html_e( 'Enable TL;DR summary on this page', 'sil' ); ?>
-				</label>
-				<?php
-			} else {
-				$tldr_disabled = '1' === get_post_meta( $post->ID, SIL_TLDR::META_DISABLED, true );
-				?>
-				<label>
-					<input type="checkbox" name="sil_tldr_disabled" value="1" <?php checked( $tldr_disabled ); ?> />
-					<?php esc_html_e( 'Disable TL;DR summary on this post', 'sil' ); ?>
-				</label>
-				<?php
-			}
-		}
-
-		// Show Clear button only when bullets exist (summary is visible on the post itself).
-		$bullets = get_post_meta( $post->ID, SIL_TLDR::META_BULLETS, true );
-		if ( ! empty( $bullets ) && is_array( $bullets ) ) {
 			$redirect_to = add_query_arg(
-				array(
-					'post'   => $post->ID,
-					'action' => 'edit',
-				),
+				array( 'post' => $post->ID, 'action' => 'edit' ),
 				admin_url( 'post.php' )
 			);
-			?>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:6px 0 0;">
-				<?php wp_nonce_field( SIL_Admin::NONCE_ACTION ); ?>
-				<input type="hidden" name="action" value="sil_clear_tldr" />
-				<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
-				<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
-				<p style="font-size:12px;color:#2a9d4e;margin:0 0 6px;">&#10003; <?php esc_html_e( 'Summary is live on the post.', 'sil' ); ?></p>
-				<button type="submit" class="button button-small"
-					onclick="return confirm('<?php echo esc_js( __( 'Clear TL;DR for this post?', 'sil' ) ); ?>');">
-					<?php esc_html_e( 'Clear TL;DR', 'sil' ); ?>
-				</button>
-			</form>
-			<?php
-		} elseif ( $has_api_key ) {
-			echo '<p style="font-size:12px;color:#888;margin:6px 0 0;">'
-				. esc_html__( 'No TL;DR yet — it will be generated on the next save.', 'sil' )
-				. '</p>';
+
+			if ( $is_page ) {
+				$tldr_enabled = '1' === get_post_meta( $post->ID, SIL_TLDR::META_ENABLED, true );
+				if ( $tldr_enabled ) {
+					?>
+					<p style="font-size:12px;color:#2a9d4e;margin:0 0 6px;">&#10003; <?php esc_html_e( 'TL;DR enabled on this page.', 'sil' ); ?></p>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0 0 6px;">
+						<?php wp_nonce_field( SIL_Admin::NONCE_ACTION ); ?>
+						<input type="hidden" name="action" value="sil_set_tldr_state" />
+						<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
+						<input type="hidden" name="state" value="disable" />
+						<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
+						<button type="submit" class="button button-small"><?php esc_html_e( 'Disable TL;DR on this page', 'sil' ); ?></button>
+					</form>
+					<?php
+				} else {
+					?>
+					<p style="font-size:12px;color:#888;margin:0 0 6px;"><?php esc_html_e( 'TL;DR disabled on this page.', 'sil' ); ?></p>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0 0 6px;">
+						<?php wp_nonce_field( SIL_Admin::NONCE_ACTION ); ?>
+						<input type="hidden" name="action" value="sil_set_tldr_state" />
+						<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
+						<input type="hidden" name="state" value="enable" />
+						<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
+						<button type="submit" class="button button-small"><?php esc_html_e( 'Enable TL;DR on this page', 'sil' ); ?></button>
+					</form>
+					<?php
+				}
+			} else {
+				$tldr_disabled = '1' === get_post_meta( $post->ID, SIL_TLDR::META_DISABLED, true );
+				if ( $tldr_disabled ) {
+					?>
+					<p style="font-size:12px;color:#888;margin:0 0 6px;"><?php esc_html_e( 'TL;DR disabled on this post.', 'sil' ); ?></p>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0 0 6px;">
+						<?php wp_nonce_field( SIL_Admin::NONCE_ACTION ); ?>
+						<input type="hidden" name="action" value="sil_set_tldr_state" />
+						<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
+						<input type="hidden" name="state" value="enable" />
+						<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
+						<button type="submit" class="button button-small"><?php esc_html_e( 'Re-enable TL;DR', 'sil' ); ?></button>
+					</form>
+					<?php
+				} else {
+					?>
+					<p style="font-size:12px;color:#2a9d4e;margin:0 0 6px;">&#10003; <?php esc_html_e( 'TL;DR active on this post.', 'sil' ); ?></p>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0 0 6px;">
+						<?php wp_nonce_field( SIL_Admin::NONCE_ACTION ); ?>
+						<input type="hidden" name="action" value="sil_set_tldr_state" />
+						<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
+						<input type="hidden" name="state" value="disable" />
+						<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
+						<button type="submit" class="button button-small"><?php esc_html_e( 'Disable TL;DR on this post', 'sil' ); ?></button>
+					</form>
+					<?php
+				}
+			}
+
+			// Clear button — only shown when bullets exist.
+			$bullets = get_post_meta( $post->ID, SIL_TLDR::META_BULLETS, true );
+			if ( ! empty( $bullets ) && is_array( $bullets ) ) {
+				?>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:4px 0 0;">
+					<?php wp_nonce_field( SIL_Admin::NONCE_ACTION ); ?>
+					<input type="hidden" name="action" value="sil_clear_tldr" />
+					<input type="hidden" name="post_id" value="<?php echo esc_attr( $post->ID ); ?>" />
+					<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect_to ); ?>" />
+					<button type="submit" class="button button-small"
+						onclick="return confirm('<?php echo esc_js( __( 'Clear TL;DR for this post?', 'sil' ) ); ?>');">
+						<?php esc_html_e( 'Clear TL;DR', 'sil' ); ?>
+					</button>
+				</form>
+				<?php
+			} elseif ( ! $tldr_disabled ?? false ) {
+				echo '<p style="font-size:12px;color:#888;margin:4px 0 0;">'
+					. esc_html__( 'No TL;DR yet — it will be generated on the next save.', 'sil' )
+					. '</p>';
+			}
 		}
 	}
 
@@ -194,12 +229,7 @@ class SIL_Post_Meta {
 			? array_map( 'absint', wp_unslash( $_POST['sil_skip_phrases'] ) )
 			: array();
 		update_post_meta( $post_id, SIL_Linker::META_SKIP_PHRASES, $skip_list );
-
-		// --- TL;DR ---
-		if ( $is_page ) {
-			update_post_meta( $post_id, SIL_TLDR::META_ENABLED, isset( $_POST['sil_tldr_enabled'] ) ? '1' : '0' );
-		} else {
-			update_post_meta( $post_id, SIL_TLDR::META_DISABLED, isset( $_POST['sil_tldr_disabled'] ) ? '1' : '0' );
-		}
+		// TL;DR enable/disable is handled by sil_set_tldr_state (admin-post.php)
+		// so it is not saved here — avoids Gutenberg meta box nonce race condition.
 	}
 }
