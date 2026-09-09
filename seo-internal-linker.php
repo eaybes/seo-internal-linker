@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SEO Internal Linker
  * Description: Automatically links predefined phrases to target pages the first time they appear in a post (or in selected pages), and generates SEO/AEO-optimised TL;DR summaries via the Claude API.
- * Version: 1.1.2
+ * Version: 1.1.3
  * Author: Elad Aybes
  * Text Domain: sil
  */

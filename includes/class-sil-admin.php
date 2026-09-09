@@ -305,9 +305,9 @@ class SIL_Admin {
 		}
 		check_admin_referer( self::NONCE_ACTION );
 
-		$post_id  = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
-		$state    = isset( $_POST['state'] ) ? sanitize_key( $_POST['state'] ) : '';
-		$redirect = isset( $_POST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ) : admin_url( 'admin.php?page=sil-phrases' );
+		$post_id  = isset( $_REQUEST['post_id'] ) ? absint( $_REQUEST['post_id'] ) : 0;
+		$state    = isset( $_REQUEST['state'] ) ? sanitize_key( $_REQUEST['state'] ) : '';
+		$redirect = isset( $_REQUEST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_REQUEST['redirect_to'] ) ) : admin_url( 'admin.php?page=sil-phrases' );
 
 		if ( $post_id && current_user_can( 'edit_post', $post_id ) ) {
 			$is_page = ( get_post_type( $post_id ) === 'page' );
@@ -333,8 +333,8 @@ class SIL_Admin {
 		}
 		check_admin_referer( self::NONCE_ACTION );
 
-		$post_id  = isset( $_POST['post_id'] ) ? absint( $_POST['post_id'] ) : 0;
-		$redirect = isset( $_POST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ) : admin_url( 'admin.php?page=sil-phrases' );
+		$post_id  = isset( $_REQUEST['post_id'] ) ? absint( $_REQUEST['post_id'] ) : 0;
+		$redirect = isset( $_REQUEST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_REQUEST['redirect_to'] ) ) : admin_url( 'admin.php?page=sil-phrases' );
 
 		if ( $post_id && current_user_can( 'edit_post', $post_id ) ) {
 			delete_post_meta( $post_id, SIL_TLDR::META_BULLETS );
