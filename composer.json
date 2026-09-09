@@ -1,0 +1,11 @@
+{
+  "name": "greenpeace/planet4-seo-internal-linker",
+  "version": "1.1.2",
+  "description": "Automatically links predefined phrases to target pages the first time they appear in a post, and generates AI-powered TL;DR summaries via the Gemini API.",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": ">=7.4"
+  },
+  "minimum-stability": "stable"
+}
